@@ -40,14 +40,30 @@ def cmd_add(args):
     return 0
 
 
-def cmd_list(args):
-    for habit in load_habits():
-        print(habit["name"])
-    return 0
-
-
 def today():
     return os.environ.get("HABITS_TODAY") or datetime.date.today().isoformat()
+
+
+def streak(done, day):
+    days = set(done)
+    current = datetime.date.fromisoformat(day)
+    if current.isoformat() not in days:
+        current -= datetime.timedelta(days=1)
+    count = 0
+    while current.isoformat() in days:
+        count += 1
+        current -= datetime.timedelta(days=1)
+    return count
+
+
+def cmd_list(args):
+    day = today()
+    for habit in load_habits():
+        if args.streaks:
+            print(f"{habit['name']}: {streak(habit['done'], day)}")
+        else:
+            print(habit["name"])
+    return 0
 
 
 def cmd_done(args):
@@ -74,6 +90,7 @@ def build_parser():
     add.add_argument("name")
     add.set_defaults(func=cmd_add)
     lst = subparsers.add_parser("list", help="list all habits")
+    lst.add_argument("--streaks", action="store_true", help="show current streaks")
     lst.set_defaults(func=cmd_list)
     done = subparsers.add_parser("done", help="mark a habit done for today")
     done.add_argument("name")
