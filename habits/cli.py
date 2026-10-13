@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -13,7 +14,9 @@ def load_habits():
     if not os.path.exists(path):
         return []
     with open(path) as f:
-        return json.load(f)
+        data = json.load(f)
+    # Old files hold plain names. New files hold {"name", "done"} objects.
+    return [{"name": h, "done": []} if isinstance(h, str) else h for h in data]
 
 
 def save_habits(habits):
@@ -28,19 +31,40 @@ def cmd_add(args):
         return 1
     habits = load_habits()
     for saved in habits:
-        if saved.lower() == name.lower():
-            print(f"habit already exists: {saved}", file=sys.stderr)
+        if saved["name"].lower() == name.lower():
+            print(f"habit already exists: {saved['name']}", file=sys.stderr)
             return 1
-    habits.append(name)
+    habits.append({"name": name, "done": []})
     save_habits(habits)
     print(f"added: {name}")
     return 0
 
 
 def cmd_list(args):
-    for name in load_habits():
-        print(name)
+    for habit in load_habits():
+        print(habit["name"])
     return 0
+
+
+def today():
+    return os.environ.get("HABITS_TODAY") or datetime.date.today().isoformat()
+
+
+def cmd_done(args):
+    wanted = args.name.strip().lower()
+    habits = load_habits()
+    for habit in habits:
+        if habit["name"].lower() == wanted:
+            day = today()
+            if day in habit["done"]:
+                print(f"already done today: {habit['name']}")
+                return 0
+            habit["done"].append(day)
+            save_habits(habits)
+            print(f"done: {habit['name']}")
+            return 0
+    print(f"no such habit: {args.name}", file=sys.stderr)
+    return 1
 
 
 def build_parser():
@@ -51,6 +75,9 @@ def build_parser():
     add.set_defaults(func=cmd_add)
     lst = subparsers.add_parser("list", help="list all habits")
     lst.set_defaults(func=cmd_list)
+    done = subparsers.add_parser("done", help="mark a habit done for today")
+    done.add_argument("name")
+    done.set_defaults(func=cmd_done)
     return parser
 
 
