@@ -67,6 +67,19 @@ def cmd_done(args):
     return 1
 
 
+def cmd_remove(args):
+    wanted = args.name.strip().lower()
+    habits = load_habits()
+    for habit in habits:
+        if habit["name"].lower() == wanted:
+            habits.remove(habit)
+            save_habits(habits)
+            print(f"removed: {habit['name']}")
+            return 0
+    print(f"no such habit: {args.name}", file=sys.stderr)
+    return 1
+
+
 def build_parser():
     parser = argparse.ArgumentParser(prog="habits", description="Habit tracker.")
     subparsers = parser.add_subparsers(dest="command", metavar="command", required=True)
@@ -78,6 +91,9 @@ def build_parser():
     done = subparsers.add_parser("done", help="mark a habit done for today")
     done.add_argument("name")
     done.set_defaults(func=cmd_done)
+    remove = subparsers.add_parser("remove", help="remove a habit")
+    remove.add_argument("name")
+    remove.set_defaults(func=cmd_remove)
     return parser
 
 
