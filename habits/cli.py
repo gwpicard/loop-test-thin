@@ -96,6 +96,11 @@ def cmd_remove(args):
     return 1
 
 
+def cmd_count(args):
+    print(len(load_habits()))
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(prog="habits", description="Habit tracker.")
     subparsers = parser.add_subparsers(dest="command", metavar="command", required=True)
@@ -111,6 +116,8 @@ def build_parser():
     remove = subparsers.add_parser("remove", help="remove a habit")
     remove.add_argument("name")
     remove.set_defaults(func=cmd_remove)
+    count = subparsers.add_parser("count", help="print how many habits exist")
+    count.set_defaults(func=cmd_count)
     return parser
 
 
