@@ -25,9 +25,10 @@ def save_habits(habits):
 
 
 def cmd_add(args):
-    if reject_blank(args):
-        return 1
     name = args.name.strip()
+    if not name:
+        print("habit name is empty", file=sys.stderr)
+        return 1
     habits = load_habits()
     for saved in habits:
         if saved["name"].lower() == name.lower():
