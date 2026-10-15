@@ -66,7 +66,16 @@ def cmd_list(args):
     return 0
 
 
+def reject_blank(args):
+    if args.name.strip():
+        return False
+    print("habit name is empty", file=sys.stderr)
+    return True
+
+
 def cmd_done(args):
+    if reject_blank(args):
+        return 1
     wanted = args.name.strip().lower()
     habits = load_habits()
     for habit in habits:
@@ -84,6 +93,8 @@ def cmd_done(args):
 
 
 def cmd_remove(args):
+    if reject_blank(args):
+        return 1
     wanted = args.name.strip().lower()
     habits = load_habits()
     for habit in habits:
